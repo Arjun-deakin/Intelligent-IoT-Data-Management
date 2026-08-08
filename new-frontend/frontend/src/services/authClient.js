@@ -1,7 +1,8 @@
 import axios from "axios";
+import { sendFrontendTelemetry } from "./frontendTelemetry";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_API_BASE_URL || "/api";
 
 const authClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +10,23 @@ const authClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+authClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = String(error?.response?.status || 'network_error');
+    const route = `${API_BASE_URL}${error?.config?.url || ''}`;
+
+    sendFrontendTelemetry({
+      eventName: status === '404' ? 'route_mismatch' : 'auth_request_error',
+      route,
+      status,
+      view: 'auth-client',
+    });
+
+    return Promise.reject(error);
+  }
+);
 
 export const loginUser = async ({ email, password }) => {
   const response = await authClient.post("/auth/login", {

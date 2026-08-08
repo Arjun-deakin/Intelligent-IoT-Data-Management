@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" modified="2026-08-04T12:00:00.000Z" agent="OpenCode" version="24.7.17" type="device">
+  <diagram id="dashboard-structure" name="Engineering Dashboard Structure">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="dashboard" value="Engineering Analytics Dashboard" style="swimlane;rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="1120" height="880" as="geometry"/>
+        </mxCell>
+        <mxCell id="header" value="Header and Filters&#xa;Environment | Team | Time Range | API Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="50" width="1060" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="summary" value="Executive Summary&#xa;Availability | p95 Latency | Error Rate | Container Health | Ingestion Status | Alerts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="140" width="1060" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="active" value="Active API Overview&#xa;All live Node backend APIs with status, latency, and error rate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="250" width="510" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="mismatch" value="Frontend / Backend Integration Risks&#xa;Missing or mismatched auth endpoints and failed frontend API calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="dashboard">
+          <mxGeometry x="580" y="250" width="510" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dataapi" value="Data API Performance&#xa;/api/streams | /api/stream-names | /api/data-profile | dataset/series/timestamp routes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="395" width="340" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="corr" value="Correlation and Analytics&#xa;/api/top-correlated-pair | /api/analyse | correlation alert APIs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="dashboard">
+          <mxGeometry x="390" y="395" width="340" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth" value="Auth APIs&#xa;/api/register | /api/login | /api/refresh-token | /api/logout | /api/admin/users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="dashboard">
+          <mxGeometry x="750" y="395" width="340" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="thing" value="ThingSpeak and Ingestion&#xa;Polling success | retries | rows inserted | /api/feeds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="550" width="340" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="runtime" value="Container Runtime Health&#xa;frontend | backend | db | optional auxiliary services" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="dashboard">
+          <mxGeometry x="390" y="550" width="340" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="alerts" value="Alert Panel&#xa;High latency | 5xx spike | missing route | DB outage | ingestion failure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="dashboard">
+          <mxGeometry x="750" y="550" width="340" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="inventory" value="Full API Inventory&#xa;Team | Service | Method | Endpoint | Status | Monitor Priority" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="dashboard">
+          <mxGeometry x="30" y="700" width="1060" height="110" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

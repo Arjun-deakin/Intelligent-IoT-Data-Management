@@ -31,7 +31,6 @@ Date: 2026-05-14
 19. [Migration and Convergence Plan](#19-migration-and-convergence-plan)
 20. [Open Decisions and Assumptions](#20-open-decisions-and-assumptions)
 21. [Appendix: Mapped Repository Artifacts](#21-appendix-mapped-repository-artifacts)
-22. [Architecture Diagram Pack](#22-architecture-diagram-pack)
 
 ---
 
@@ -54,6 +53,8 @@ This High-Level Design (HLD) defines a complete architectural blueprint for the 
 - Sections 8-12 describe what the system is and how core flows execute.
 - Sections 13-18 describe quality, security, operational readiness, and risk posture.
 - Sections 19-21 provide practical transition and traceability to repository assets.
+
+![Figure 1.1: Architecture-at-a-Glance (Layers, key APIs, end-to-end data flow, and legend)](diagrams/01-1-architecture-at-a-glance.png)
 
 ---
 
@@ -84,7 +85,7 @@ Without architectural convergence, prototype-heavy repositories often suffer fro
 
 - A unified runtime path centered on:
   - React dashboard (`new-frontend/frontend`),
-  - Node/Express API (`newBackend/BackendCode`),
+  - Node/Express API (`backend`),
   - curated analytics logic integrated behind API contracts,
   - canonical JSON/CSV sensor payloads.
 - Stream discovery, stream filtering, and dashboard visual analytics.
@@ -166,7 +167,7 @@ The repository now reflects merged contributions from multiple teams and contain
 - Frontend prototype A: `frontend` (React/Vite app with auth screens, analyze panel, export flow, and MUI theme toggling).
 - Frontend prototype B: `new-frontend/frontend` (dashboard-focused implementation).
 - Backend prototype A: `backend/iot_backend` (Django + DRF + model-backed API).
-- Backend prototype B: `newBackend/BackendCode` (Node/Express file-backed API).
+- Backend prototype B: `backend` (Node/Express API with file-backed and DB-oriented evolution path).
 - Analytics prototype services:
   - `data_science/development/server.py` (Flask /analyze),
   - `data_science/development/server_corr.py` (Flask correlation and CSV outputs),
@@ -188,7 +189,7 @@ Converge to one primary execution path while treating other stacks as controlled
 Primary path for delivery:
 
 1. `new-frontend/frontend`
-2. `newBackend/BackendCode`
+2. `backend`
 3. Selected analytics logic integrated through API contracts
 4. Curated dataset source (JSON/CSV)
 
@@ -215,6 +216,8 @@ Secondary/extension path:
       |
       +--> [Analytics Module (correlation/anomaly functions)]
 ```
+
+![Figure 7.1: System Context Diagram](diagrams/07-1-system-context-diagram.png)
 
 ### 7.2 Layered Responsibility Model
 
@@ -243,7 +246,9 @@ Secondary/extension path:
 
 ## 8. Component View (Layer by Layer)
 
-## 8.1 Presentation Layer: React Dashboard
+![Figure 8.1: Layered Component Diagram (Primary Runtime)](diagrams/08-1-layered-component-diagram-primary-runtime.png)
+
+### 8.1 Presentation Layer: React Dashboard
 
 Primary codebase: `new-frontend/frontend`
 
@@ -279,17 +284,17 @@ Current gap observed:
 
 - `useSensorData` currently defaults to mock mode and requests `/api/sensor-data` in live mode, while backend exposes `/api/streams`. This is a contract mismatch risk that must be normalized.
 
-## 8.2 API Layer: Node/Express Service
+### 8.2 API Layer: Node/Express Service
 
-Primary codebase: `newBackend/BackendCode`
+Primary codebase: `backend`
 
 Current implementation structure:
 
-- Server bootstrap: `server.js`
-- Routes: `routes/mock.js`
-- Controller: `controllers/mockController.js`
-- Service: `services/mockService.js`
-- Repository: `repositories/mockRepository.js`
+- Server bootstrap: `src/server.js`
+- Routes: `src/routes/mock.js`
+- Controller: `src/controllers/mockController.js`
+- Service: `src/services/mockService.js`
+- Repository: `src/repositories/mockRepository.js`
 
 Current exposed API (through `/api` mount):
 
@@ -321,10 +326,10 @@ Backend security integration update (PR #70):
 
 Current convergence notes:
 
-- `GET /health` is implemented in `newBackend/BackendCode/app.js` and used for operational verification.
+- `GET /health` is implemented in `backend/src/server.js` and used for operational verification.
 - `useSensorData` live-mode path (`/api/sensor-data`) is still not aligned with Node route naming (`/api/streams`), so contract normalization or an alias remains required.
 
-## 8.3 Optional Data Service Layer: Django + DRF Path
+### 8.3 Optional Data Service Layer: Django + DRF Path
 
 Codebase: `backend/iot_backend`
 
@@ -358,7 +363,7 @@ Architecture interpretation:
 - The project now has a clearer persistence-evolution stream (file-backed -> DB-backed).
 - Canonical runtime still documents file-backed Node path as primary, while DB-backed path is treated as integration-ready extension pending full upstream convergence.
 
-## 8.4 Analytics Service/Module Layer
+### 8.4 Analytics Service/Module Layer
 
 Available analytics assets:
 
@@ -478,6 +483,8 @@ Recommended response envelope for future hardening:
 
 ## 11. End-to-End Functional Flows
 
+![Figure 11.1: End-to-End Sequence Diagram (Stream Filtering)](diagrams/11-1-end-to-end-sequence-diagram-stream-filtering.png)
+
 ### 11.1 Flow A: Dashboard Initialization
 
 1. User navigates to dashboard route.
@@ -510,6 +517,8 @@ Recommended response envelope for future hardening:
 ---
 
 ## 12. Analytics and Intelligence Design
+
+![Figure 12.1: Data Processing and Insight Flow](diagrams/12-1-data-processing-and-insight-flow.png)
 
 ### 12.1 Analytics Objective
 
@@ -634,40 +643,123 @@ PR reference: `https://github.com/DataBytes-Organisation/Intelligent-IoT-Data-Ma
 
 ## 15. Deployment and Environment Architecture
 
-### 15.1 Local Development Mode
+![Figure 15.1: Container-Based Architecture (Docker)](diagrams/Docker_Architecture.png)
 
-- Frontend: Vite dev server.
-- Backend: Node/Express service.
-- Optional analytics: Flask service for advanced endpoints.
-- Data source: local curated files.
+![Figure 15.2: Existing Project Mapping (Current Ecosystem)](diagrams/22-5-existing-project-mapping-current-ecosystem.png)
 
-### 15.2 Containerized Path (Repository Assets)
+### 15.1 Existing Project Mapping Components
 
-`Docker/docker-compose.yaml` defines service topology including:
+- **Frontend stream**
+  - Vite React user interface
+  - Authentication pages
+  - Dashboard navigation and visualization flow
 
-- PostgreSQL (`db`)
-- Django backend (`backend`)
-- React frontend via Nginx (`frontend`)
-- cAdvisor, Prometheus, Grafana for monitoring stack
+- **Backend stream**
+  - Node/Express API layer
+  - Health endpoint
+  - Data, auth, and analytics orchestration
 
-This compose stack reflects the broader prototype ecosystem and can be used as a reference architecture for operations concepts. It currently aligns more closely to the Django-centric path than the primary converged Node runtime path.
+- **Analytics extension stream**
+  - Flask and data-science assets retained as optional extension capability
+  - Not treated as the primary demo runtime
 
-### 15.3 Environment Segmentation
+- **Data and persistence stream**
+  - Curated local files
+  - PostgreSQL schema-backed storage
+  - ThingSpeak live feed ingestion
 
-- Development: rapid iteration and dataset experimentation.
-- Demo/Staging: fixed dataset and pinned configuration.
-- Future production: hardened contracts, auth, persistence, and observability.
+### 15.2 Container-Based Architecture Components
 
-### 15.4 Persistence Evolution Note
+Figure 15.1 is the primary Docker deployment view. It shows the container boundaries, exposed ports, persistent storage path, bind-mounted development paths, and the communication links between browser, frontend, backend, database, and ThingSpeak ingestion flow.
 
-- Recent DB-focused stream work demonstrates transition readiness toward persistent storage and ingestion pipelines.
-- Production-oriented deployment should prioritize the DB-backed endpoint family once schema, ingestion jobs, and route contracts are unified in upstream main.
+Figure 15.2 remains the project mapping view. Together, the two diagrams connect the broader project structure to the selected Docker execution path so the architectural narrative remains traceable from repository reality to operational deployment.
+
+### 15.2.1 Docker Service Topology
+
+- **Frontend container**
+  - Runs the Vite React application
+  - Exposes port `5173`
+  - Proxies `/api` traffic to the backend container
+
+- **Backend container**
+  - Runs the Node/Express API
+  - Exposes port `3000`
+  - Publishes the `/health` endpoint for readiness and monitoring
+
+- **Database container**
+  - Runs PostgreSQL 16
+  - Exposes port `5432`
+  - Initializes schema from `backend/src/db/schema.sql`
+
+- **Persistent storage**
+  - Uses a named volume for PostgreSQL data persistence
+  - Preserves data across container restarts
+
+- **Development bind mounts**
+  - Mounts `new-frontend/frontend` into the frontend container
+  - Mounts `backend` into the backend container
+  - Supports live iteration during development
+
+### 15.2.2 Inter-Container Communication and Data Flow
+
+- Browser requests terminate at the frontend container.
+- Frontend API requests are proxied internally to the backend container.
+- Backend database operations are executed through the internal PostgreSQL service name.
+- Backend ingestion logic also communicates with the external ThingSpeak API.
+- Schema initialization and persistent volume usage support stable startup and data retention.
+
+### 15.2.3 Operational Verification Summary
+
+- Backend health check returns `200 OK`.
+- Frontend host port is reachable on `5173`.
+- Proxied API access through `/api/streams` resolves successfully.
+- Database schema initializes with `datasets`, `timeseries`, and `timeseries_long` tables.
+- ThingSpeak polling can execute inside the containerized runtime when environment variables are present.
+
+### 15.3 Container Runtime and Deployment Details
+
+The deployment model separates runtime responsibilities into three operational concerns: container health orchestration, runtime network access, and persistent/configured infrastructure behavior.
+
+- **Health and startup control**
+  - PostgreSQL must become healthy before backend startup.
+  - Backend health must succeed before frontend readiness is considered complete.
+
+- **Network and ports**
+  - Frontend host access: `5173`
+  - Backend host access: `3000`
+  - PostgreSQL host access: `5432`
+
+- **Storage and configuration**
+  - Bind mounts support local development changes.
+  - Named volume supports persistence.
+  - Environment variables configure DB connectivity and ThingSpeak polling.
+
+### 15.4 Container Build and Deployment Procedure
+
+The containerized stack is built and executed from the repository root.
+
+```bash
+docker compose up --build
+docker compose up --build -d
+docker compose ps
+docker compose logs -f
+docker compose down
+docker compose down -v
+```
+
+- The build step creates frontend and backend images from their Dockerfiles.
+- The startup sequence respects service dependency order.
+- Verification should confirm browser access, backend health, API proxy success, and database availability.
 
 ---
 
 ## 16. Observability, Monitoring, and Operations
 
+![Figure 16.1: Engineering Analytics Metrics View](diagrams/Analytic_Metrics.png)
+
 ### 16.1 Operational Metrics
+
+Figure 16.1 summarizes the engineering metrics view that operations and technical reviewers use to assess runtime stability, endpoint health, performance patterns, and integration quality across the platform.
 
 - API request count and response latency.
 - Error-rate by endpoint (`4xx` and `5xx`).
@@ -685,6 +777,134 @@ This compose stack reflects the broader prototype ecosystem and can be used as a
 ### 16.3 Monitoring Stack Opportunity
 
 Existing Docker assets include Prometheus and Grafana, enabling future instrumentation rollout for demonstrable reliability engineering practices.
+
+### 16.4 Engineering Analytics Architecture
+
+The engineering analytics architecture is defined as an observability layer over the existing project runtime. Its purpose is to measure service behavior, API reliability, runtime health, and integration quality without duplicating any team-owned application logic.
+
+Figure 16.2 presents the planned analytics stack, showing how runtime sources feed collection targets, how Prometheus stores metrics, and how Grafana and alerting consume those metrics for engineering visibility.
+
+![Figure 16.2: Engineering Analytics Stack Architecture](diagrams/Analytics_Stack.png)
+
+### 16.4.1 Stack Components
+
+- **Frontend telemetry component**
+  - Captures browser-side API failures, request timing, and user-interface level integration problems that are not visible from the backend alone.
+  - Supports detection of route mismatches and failed dashboard/API interactions.
+
+- **Backend middleware component**
+  - Measures request count, endpoint latency, status-code distribution, and route-level execution behavior for the active Node/Express API layer.
+  - Provides the primary source of operational metrics for backend endpoints.
+
+- **Correlation and analytics service component**
+  - Records processing duration, success/failure rate, and endpoint responsiveness for correlation and analysis workloads.
+  - Ensures engineering monitoring can cover backend-owned and analytics-owned computation paths consistently.
+
+- **Database health component**
+  - Verifies PostgreSQL connectivity, schema readiness, and write-path success.
+  - Separates persistence failures from API contract failures.
+
+- **ThingSpeak ingestion component**
+  - Measures polling success, retry frequency, upstream dependency stability, and rows inserted per ingestion cycle.
+  - Provides visibility into the external IoT feed dependency.
+
+- **Health endpoint component**
+  - Exposes lightweight readiness and liveness checks through `/health` and Docker service health checks.
+  - Supports startup verification, runtime checks, and automated monitoring.
+
+- **Optional cAdvisor component**
+  - Provides container CPU, memory, and runtime statistics when infrastructure-level visibility is needed.
+  - Complements application metrics with container resource metrics.
+
+- **Prometheus component**
+  - Acts as the central time-series metrics store and scrape engine.
+  - Collects metrics from application targets, runtime exporters, and health-oriented sources at fixed intervals.
+
+- **Grafana component**
+  - Provides dashboard visualization, service drill-down, and trend-based engineering reporting.
+  - Presents API health, latency, error rate, ingestion status, and container state in one monitoring view.
+
+- **Alert rules component**
+  - Evaluates high latency, high error rate, missing route calls, ingestion failure, and service unavailability.
+  - Converts passive metrics into operational actions and escalation signals.
+
+### 16.4.2 Metrics Coverage
+
+- **Operational metrics**
+  - Service availability
+  - Container health state
+  - Restart count
+  - Health-check success
+  - Database connectivity
+  - Ingestion job state
+
+- **Performance metrics**
+  - Request volume
+  - Average latency
+  - p95 latency
+  - Endpoint execution duration
+  - Throughput
+  - Ingestion-to-store delay
+
+- **Reliability metrics**
+  - `4xx` rate
+  - `5xx` rate
+  - Timeout frequency
+  - Retry count
+  - Failed inserts
+  - Failed frontend API calls
+
+- **Integration metrics**
+  - Frontend/backend route mismatches
+  - Backend/database communication issues
+  - Backend/ThingSpeak dependency health
+  - Cross-team API compatibility gaps
+
+- **Benchmarking metrics**
+  - Stack startup time
+  - Service readiness time
+  - Analysis endpoint duration
+  - Ingestion cycle duration
+  - Comparative endpoint performance under defined test conditions
+
+### 16.4.3 Dashboard Scope
+
+![Figure 16.3: Engineering Analytics Dashboard Mockup](diagrams/dashboard-mockup-user.png)
+
+Figure 16.3 demonstrates the intended engineering dashboard layout. It emphasizes grouped API monitoring, integration mismatch visibility, ingestion health, runtime status, and a complete API inventory arranged by technical ownership area.
+
+- **Backend API section**
+  - Health, auth, dataset, stream, timestamp, analysis, and ThingSpeak feed endpoints.
+
+- **Frontend integration section**
+  - Browser-side failed calls, missing route visibility, and request timing for dashboard and authentication flows.
+
+- **Correlation and analytics section**
+  - Correlation-alert APIs, analysis endpoints, execution duration, and failure visibility.
+
+- **Platform section**
+  - PostgreSQL health, Docker container runtime metrics, ThingSpeak ingestion health, and alert conditions tied to infrastructure and dependencies.
+
+- **Inventory section**
+  - Complete API catalogue grouped by backend, frontend mismatch, correlation service, analytics service, and ThingSpeak monitoring surfaces.
+
+### 16.4.4 Architecture Principles
+
+- **Non-duplication principle**
+  - Existing team APIs remain the system of record.
+  - Analytics measures them rather than replacing them.
+
+- **Cross-team visibility principle**
+  - Frontend, backend, correlation, analytics, database, and ingestion paths must appear in one engineering monitoring view.
+
+- **Low-intrusion instrumentation principle**
+  - Metrics are captured through middleware, counters, health checks, scrape targets, and exporters rather than through parallel business APIs.
+
+- **Deployment alignment principle**
+  - The analytics stack must operate within the Docker-based runtime already established for the project.
+
+- **Extensibility principle**
+  - Archived or auxiliary services can be monitored later without redesigning the overall stack model.
 
 ---
 
@@ -742,6 +962,10 @@ Before demo freeze:
 
 ## 19. Migration and Convergence Plan
 
+![Figure 19.1: Convergence Roadmap Diagram](diagrams/19-1-convergence-roadmap-diagram.png)
+
+![Figure 19.2: Before/After Convergence View (fragmented architecture to aligned delivery path)](diagrams/19-2-before-after-convergence-view.png)
+
 ### Milestone 1: Contract Convergence (1-2 days)
 
 - Align frontend data fetch path with backend routes.
@@ -788,10 +1012,10 @@ Before demo freeze:
 
 - Frontend: `new-frontend/frontend/src/components/Dashboard.jsx`
 - Frontend hook: `new-frontend/frontend/src/hooks/useSensorData.js`
-- Node server: `newBackend/BackendCode/server.js`
-- Node routes: `newBackend/BackendCode/routes/mock.js`
-- Node service: `newBackend/BackendCode/services/mockService.js`
-- Node repository: `newBackend/BackendCode/repositories/mockRepository.js`
+- Node server: `backend/src/server.js`
+- Node routes: `backend/src/routes/mock.js`
+- Node service: `backend/src/services/mockService.js`
+- Node repository: `backend/src/repositories/mockRepository.js`
 
 ### 21.2 Secondary/Extension Artifacts
 
@@ -803,152 +1027,13 @@ Before demo freeze:
 
 ### 21.3 Operations and Platform Artifacts
 
-- Compose topology: `Docker/docker-compose.yaml`
-- Backend container config: `Docker/Backend-Dockerfile`
-- Frontend container config: `Docker/Frontend-Dockerfile`
+- Compose topology: `docker-compose.yml`
+- Backend container config: `backend/Dockerfile`
+- Frontend container config: `new-frontend/frontend/Dockerfile`
 
----
+![Figure 21.1: Traceability Matrix (Requirement -> Design section -> Repo file)](diagrams/21-1-traceability-matrix.png)
 
-## 22. Architecture Diagram Pack
-
-This section provides embedded diagrams (Mermaid format) that can be rendered in Markdown viewers supporting Mermaid. The diagrams are aligned with the architecture decisions and flows described in Sections 7 through 19.
-
-### 22.1 System Context Diagram
-
-```mermaid
-flowchart LR
-  U[Analyst or Operator] --> B[Web Browser]
-  B --> FE[React Dashboard\nnew-frontend/frontend]
-  FE --> API[Node Express API\nnewBackend/BackendCode]
-  API --> DATA[(Processed JSON or CSV)]
-  API --> ANA[Analytics Module\nCorrelation and anomaly logic]
-  API -. optional extension .-> DJ[DJango DRF API\nbackend/iot_backend]
-  ANA --> FE
-  API --> FE
-```
-
-### 22.2 Layered Component Diagram (Primary Runtime)
-
-```mermaid
-flowchart TB
-  subgraph L1[Presentation Layer]
-    FE1[Dashboard Page]
-    FE2[Hooks\nuseSensorData\nuseFilteredData\nuseStreamNames]
-    FE3[Charts and Insight Components]
-    FE1 --> FE2 --> FE3
-  end
-
-  subgraph L2[Application API Layer]
-    R[Routes]
-    C[Controllers]
-    S[Services]
-    R --> C --> S
-  end
-
-  subgraph L3[Data and Analytics Layer]
-    REP[Repository\nmockRepository.js]
-    ALG[Analytics Functions\ncorrelation_based.py or equivalent]
-    REP --> ALG
-  end
-
-  L1 --> L2 --> L3
-```
-
-### 22.3 End-to-End Sequence Diagram (Stream Filtering)
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant User
-  participant UI as React Dashboard
-  participant API as Node API
-  participant Service as Mock Service
-  participant Repo as Mock Repository
-  participant File as Processed Data File
-
-  User->>UI: Select stream names and apply filter
-  UI->>API: POST /api/filter-streams {streamNames}
-  API->>Service: Validate and process request
-  Service->>Repo: getMockData()
-  Repo->>File: Read JSON content
-  File-->>Repo: Dataset rows
-  Repo-->>Service: Parsed records
-  Service-->>API: Filtered records
-  API-->>UI: 200 OK + filtered payload
-  UI-->>User: Update charts and stats
-```
-
-### 22.4 Data Processing and Insight Flow
-
-```mermaid
-flowchart LR
-  A[Raw or Curated CSV] --> B[Preprocessing\nSort, parse timestamp, interpolate]
-  B --> C[Canonical Record Contract]
-  C --> D[Stream Discovery]
-  C --> E[Stream Filtering]
-  E --> F[Correlation Computation]
-  F --> G[Insight Label\nstrong or moderate or weak]
-  G --> H[Dashboard Insight Card and Plots]
-```
-
-### 22.5 Deployment View (Current Ecosystem)
-
-```mermaid
-flowchart LR
-  subgraph Client
-    BR[Browser]
-  end
-
-  subgraph PrimaryPath[Primary Converged Path]
-    FE[React Vite App]
-    API[Node Express API]
-    DS[(Local Processed Data)]
-    FE --> API --> DS
-  end
-
-  subgraph ExtensionPath[Optional Extension Path]
-    DJ[DJango DRF]
-    PG[(PostgreSQL)]
-    FL[Flask Analytics]
-    DJ --> PG
-    DJ --> FL
-  end
-
-  BR --> FE
-  API -. future migration .-> DJ
-```
-
-### 22.6 Monitoring and Operations View
-
-```mermaid
-flowchart TB
-  FE[Frontend]
-  API[Backend API]
-  H[Health Endpoint\nGET /health]
-  M[Metrics Export Layer]
-  P[Prometheus]
-  G[Grafana]
-  O[Operator]
-
-  FE --> API
-  API --> H
-  API --> M --> P --> G --> O
-  O --> H
-```
-
-### 22.7 Convergence Roadmap Diagram
-
-```mermaid
-flowchart LR
-  M1[Milestone 1\nContract Convergence] --> M2[Milestone 2\nAnalytics Integration]
-  M2 --> M3[Milestone 3\nQuality and Demo Hardening]
-  M3 --> M4[Milestone 4\nOptional Persistence Extension]
-
-  M1 --> T1[Align endpoints\nAdd health]
-  M2 --> T2[Top correlated pair\nAPI contract output]
-  M3 --> T3[Test evidence\nRunbook]
-  M4 --> T4[Django or PostgreSQL evolution]
-```
+![Figure 21.2: Optimization Traceability Matrix (frontend PR #71, backend PR #97, models PR #112, and current API convergence)](diagrams/21-2-optimization-traceability-matrix.png)
 
 ---
 

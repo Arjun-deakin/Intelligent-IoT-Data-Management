@@ -1,0 +1,907 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "round(avg_over_time(up{job=\"backend\"}[1m]) * 100, 0.1)",
+          "instant": true,
+          "legendFormat": "Availability",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "AVAILABILITY",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "round((histogram_quantile(0.95, sum by (le) (rate(iot_http_request_duration_seconds_bucket[5m]))) or vector(0)) * 1000, 0.1)",
+          "instant": true,
+          "legendFormat": "API p95 Latency",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "API P95 LATENCY",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "round((((sum(rate(iot_http_requests_total{status_code=~\"4..|5..\"}[5m])) / clamp_min(sum(rate(iot_http_requests_total[5m])), 0.000001)) or vector(0)) * 100), 0.1)",
+          "instant": true,
+          "legendFormat": "Error Rate",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "ERROR RATE",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "max(iot_thingspeak_last_rows_inserted) or vector(0)",
+          "instant": true,
+          "legendFormat": "ThingSpeak Ingest",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "THINGSPEAK INGEST",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "Unhealthy"
+                },
+                "1": {
+                  "text": "Connected"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "Connected",
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "max(iot_db_health_status)",
+          "instant": true,
+          "legendFormat": "DB Health",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "DB HEALTH",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(changes(container_start_time_seconds{id=~\"/docker/(0a6d54f4db61|840daaefdac8|cf0cfaf404f0|04574f5476c7|1cdb8c55a6e0|5d1a38dd954c|aa2ff9a7e4d2|37f86079a5e4)\"}[6h])) or vector(0)",
+          "instant": true,
+          "legendFormat": "Container Restarts",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "CONTAINER RESTARTS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(iot_http_request_duration_seconds_bucket[5m]))) * 1000",
+          "legendFormat": "p95 Latency (ms)",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Latency Trend (p95)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 10,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "vector(0)",
+          "legendFormat": "Frontend",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(increase(iot_http_requests_total[24h])) or vector(0)",
+          "legendFormat": "Backend",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(increase(iot_db_queries_total[24h])) or vector(0)",
+          "legendFormat": "DB",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(increase(iot_thingspeak_rows_inserted_total[24h])) or vector(0)",
+          "legendFormat": "ThingSpeak",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Service Request Volume",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 9,
+      "options": {
+        "content": "### Service Health\n\n- **frontend**  \n  Planned browser telemetry  \n  **Healthy**\n\n- **backend**  \n  `/health` 200 OK  \n  **Healthy**\n\n- **db**  \n  PostgreSQL ready  \n  **Healthy**\n\n- **thingspeak poller**  \n  Runtime pipeline active  \n  **Warning if retries > 0**",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.1.0",
+      "title": "Service Health",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      },
+      "id": 10,
+      "options": {
+        "content": "### Endpoint Performance Snapshot\n\n| Endpoint | p95 Latency | Error Rate | Trend |\n|---|---:|---:|---|\n| `/api/streams` | 420 ms | 0.8% | rising |\n| `/api/data-profile` | 310 ms | 0.2% | stable |\n| `/api/top-correlated-pair` | 690 ms | 1.1% | volatile |\n| `/api/auth/login` | 250 ms | 0.4% | stable |",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.1.0",
+      "title": "Endpoint Performance Snapshot",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      },
+      "id": 11,
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Key Alerts",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            },
+            "renameByName": {
+              "alertname": "alert",
+              "severity": "severity",
+              "instance": "instance",
+              "job": "job"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 13
+      },
+      "id": 12,
+      "options": {
+        "content": "<div style=\"display:flex;gap:10px;align-items:center;height:100%;padding:8px 4px;box-sizing:border-box;\"><div style=\"flex:1;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 10px;text-align:center;height:100%;box-sizing:border-box;\"><div style=\"font-size:28px;color:#3b82f6;line-height:1;\">\u2699</div><div style=\"font-size:14px;font-weight:700;color:#1f2937;margin-top:8px;\">Collectors</div><div style=\"font-size:12px;line-height:1.6;color:#374151;margin-top:10px;\">Backend middleware<br/>Health checks<br/>ThingSpeak poll counters<br/>Frontend telemetry</div></div><div style=\"font-size:22px;color:#64748b;font-weight:700;\">\u2192</div><div style=\"flex:1;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 10px;text-align:center;height:100%;box-sizing:border-box;\"><div style=\"font-size:28px;color:#16a34a;line-height:1;\">\u26c1</div><div style=\"font-size:14px;font-weight:700;color:#1f2937;margin-top:8px;\">Storage</div><div style=\"font-size:12px;line-height:1.6;color:#374151;margin-top:10px;\">Prometheus<br/>time-series<br/>metrics store</div></div><div style=\"font-size:22px;color:#64748b;font-weight:700;\">\u2192</div><div style=\"flex:1;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 10px;text-align:center;height:100%;box-sizing:border-box;\"><div style=\"font-size:28px;color:#a855f7;line-height:1;\">\ud83d\udcc8</div><div style=\"font-size:14px;font-weight:700;color:#1f2937;margin-top:8px;\">Visualization</div><div style=\"font-size:12px;line-height:1.6;color:#374151;margin-top:10px;\">Grafana<br/>dashboard<br/>React operations<br/>view (optional)</div></div></div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.1.0",
+      "title": "Collection Framework View",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 21
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (route, status) (increase(iot_frontend_route_mismatch_total[15m]))",
+          "legendFormat": "{{status}} {{route}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Frontend Mismatch APIs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (route, method) (rate(iot_http_requests_total{route=~\"/api/top-correlated-pair|/api/analyse\"}[5m]))",
+          "legendFormat": "{{method}} {{route}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Correlation / Analytics APIs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 21
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (status) (rate(iot_thingspeak_polls_total[5m]))",
+          "legendFormat": "poll {{status}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "rate(iot_thingspeak_rows_inserted_total[5m])",
+          "legendFormat": "rows inserted/sec",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "ThingSpeak Ingestion",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 29
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (status) (rate(iot_db_queries_total[5m]))",
+          "legendFormat": "query {{status}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Database Query Activity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 29
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "iot_docker_service_memory_usage_bytes{service=~\"backend|db|frontend|prometheus|grafana|cadvisor|correlation-alert|archived-analytics\",state=\"running\"}",
+          "legendFormat": "{{service}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Container Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 29
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "iot_docker_service_cpu_percent{service=~\"backend|db|frontend|prometheus|grafana|cadvisor|correlation-alert|archived-analytics\",state=\"running\"}",
+          "legendFormat": "{{service}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Container CPU Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 19,
+      "options": {
+        "content": "<div style=\"padding:8px 6px 2px 6px;color:#1f2937;font-family:Inter,Segoe UI,Arial,sans-serif;\"><div style=\"font-size:20px;font-weight:700;margin-bottom:14px;\">Complete API Inventory By Section</div><table style=\"width:100%;border-collapse:collapse;table-layout:fixed;\"><tr><td valign=\"top\" style=\"width:50%;padding:0 8px 14px 0;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:15px;font-weight:700;color:#f97316;margin:0 0 8px 0;\">Backend APIs</div><table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">API / Surface</th><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">Metric Focus</th></tr></thead><tbody><tr><td style=\"padding:3px 0;\">GET /health</td><td>availability, reachability</td></tr><tr><td style=\"padding:3px 0;\">GET /api/streams</td><td>latency, payload success</td></tr><tr><td style=\"padding:3px 0;\">GET /api/stream-names</td><td>latency, error rate</td></tr><tr><td style=\"padding:3px 0;\">POST /api/filter-streams</td><td>validation, failure rate</td></tr><tr><td style=\"padding:3px 0;\">GET /api/data-profile</td><td>latency, error rate</td></tr><tr><td style=\"padding:3px 0;\">GET /api/datasets</td><td>latency, error rate</td></tr><tr><td style=\"padding:3px 0;\">GET /api/datasets/:id</td><td>latency, 404 rate</td></tr><tr><td style=\"padding:3px 0;\">POST /api/datasets</td><td>create success, validation</td></tr><tr><td style=\"padding:3px 0;\">GET /api/datasets/:name/series</td><td>payload success, latency</td></tr><tr><td style=\"padding:3px 0;\">POST /api/datasets/:name/series/filter</td><td>filter success, 4xx rate</td></tr><tr><td style=\"padding:3px 0;\">GET /api/datasets/:name/timestamps</td><td>latency, success rate</td></tr><tr><td style=\"padding:3px 0;\">POST /api/register</td><td>auth success, 4xx rate</td></tr><tr><td style=\"padding:3px 0;\">POST /api/login</td><td>auth failures, latency</td></tr><tr><td style=\"padding:3px 0;\">POST /api/refresh-token</td><td>token refresh success</td></tr><tr><td style=\"padding:3px 0;\">POST /api/logout</td><td>request success, latency</td></tr><tr><td style=\"padding:3px 0;\">GET /api/admin/users</td><td>401/403 rate, latency</td></tr><tr><td style=\"padding:3px 0;\">GET /api/feeds</td><td>upstream success, latency</td></tr><tr><td style=\"padding:3px 0;\">POST /api/analyse</td><td>execution time, success</td></tr><tr><td style=\"padding:3px 0;\">POST /api/top-correlated-pair</td><td>p95 latency, failures</td></tr></tbody></table></div></td><td valign=\"top\" style=\"width:50%;padding:0 0 14px 8px;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:15px;font-weight:700;color:#ef4444;margin:0 0 8px 0;\">Frontend / Integration Mismatch</div><table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">API / Surface</th><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">Metric Focus</th></tr></thead><tbody><tr><td style=\"padding:3px 0;\">Dashboard API calls</td><td>request failure, render timing</td></tr><tr><td style=\"padding:3px 0;\">POST /api/auth/login</td><td>404 count, integration gap</td></tr><tr><td style=\"padding:3px 0;\">POST /api/auth/register</td><td>404 count, integration gap</td></tr><tr><td style=\"padding:3px 0;\">POST /api/auth/verify-2fa</td><td>404 count, integration gap</td></tr><tr><td style=\"padding:3px 0;\">POST /api/auth/resend-2fa</td><td>404 count, integration gap</td></tr><tr><td style=\"padding:3px 0;\">POST /api/auth/forgot-password</td><td>404 count, integration gap</td></tr></tbody></table></div></td></tr></table><table style=\"width:100%;border-collapse:collapse;table-layout:fixed;\"><tr><td valign=\"top\" style=\"width:25%;padding:0 8px 0 0;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:14px;font-weight:700;color:#8b5cf6;margin:0 0 8px 0;\">Correlation Service APIs</div><table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">API / Surface</th><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">Metric Focus</th></tr></thead><tbody><tr><td style=\"padding:3px 0;\">GET /service-status</td><td>availability, latency</td></tr><tr><td style=\"padding:3px 0;\">POST /detect-correlation-alert</td><td>execution time, failures</td></tr></tbody></table></div></td><td valign=\"top\" style=\"width:25%;padding:0 8px;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:14px;font-weight:700;color:#3b82f6;margin:0 0 8px 0;\">Analytics / Archived APIs</div><table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">API / Surface</th><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">Metric Focus</th></tr></thead><tbody><tr><td style=\"padding:3px 0;\">POST /analyze</td><td>optional monitoring</td></tr><tr><td style=\"padding:3px 0;\">POST /analyze-csv</td><td>optional monitoring</td></tr><tr><td style=\"padding:3px 0;\">POST /analyze-corr</td><td>optional monitoring</td></tr></tbody></table></div></td><td valign=\"top\" style=\"width:25%;padding:0 8px;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:14px;font-weight:700;color:#16a34a;margin:0 0 8px 0;\">ThingSpeak Monitoring Surface</div><table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">API / Surface</th><th style=\"text-align:left;padding:4px 0;border-bottom:1px solid #e5e7eb;\">Metric Focus</th></tr></thead><tbody><tr><td style=\"padding:3px 0;\">Polling service / feeds</td><td>ingestion success, retry count</td></tr></tbody></table></div></td><td valign=\"top\" style=\"width:25%;padding:0 0 0 8px;vertical-align:top;\"><div style=\"border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;box-sizing:border-box;\"><div style=\"font-size:14px;font-weight:700;color:#111827;margin:0 0 8px 0;\">Legend</div><div style=\"font-size:12px;line-height:1.9;\"><div><span style=\"color:#16a34a;font-size:16px;\">\u2501</span> Healthy / Normal</div><div><span style=\"color:#f59e0b;font-size:16px;\">\u2501</span> Warning</div><div><span style=\"color:#ef4444;font-size:16px;\">\u2501</span> Critical / Error</div><div><span style=\"color:#3b82f6;font-size:16px;\">\u2501</span> Informational</div></div></div></td></tr></table></div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.1.0",
+      "title": "Complete API Inventory By Section",
+      "type": "text"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "light",
+  "tags": [
+    "engineering-analytics",
+    "iot"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Engineering Analytics Dashboard",
+  "uid": "engineering-analytics-dashboard",
+  "version": 4,
+  "weekStart": ""
+}

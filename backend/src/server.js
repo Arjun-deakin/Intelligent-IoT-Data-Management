@@ -1,9 +1,21 @@
 //handles server setup and configuration for the Express backend
 
-require('dotenv').config({ path: '../.env' }); // Load .env from root
+const path = require('path');
+
+require('dotenv').config({
+  path: path.resolve(__dirname, '../.env')
+});
 
 const express = require('express');
 const cors = require('cors');
+const pool = require('./db/pool');
+const {
+  register,
+  client,
+  metricsMiddleware,
+  dbHealthStatus,
+  dbConnectionInfo
+} = require('./monitoring/metrics');
 
 // Your CSR routing structure (datasets, series, timestamps, analyse, etc.)
 const apiRouter = require('./routes'); // loads index.js inside /routes
@@ -12,6 +24,7 @@ const apiRouter = require('./routes'); // loads index.js inside /routes
 const mockRoutes = require('./routes/mock');
 const thingSpeakRoutes = require('./routes/thingspeak');
 const authRoutes = require('./routes/auth');
+const telemetryRoutes = require('./routes/telemetry');
 
 
 const { startThingSpeakPolling } = require('./services/thingspeakService');
@@ -23,13 +36,58 @@ const { startThingSpeakPolling } = require('./services/thingspeakService');
 
 const app = express();
 
+const updateDatabaseHealthMetrics = async () => {
+  try {
+    await pool.query('SELECT 1');
+    dbHealthStatus.set(1);
+    dbConnectionInfo.reset();
+    dbConnectionInfo.set({ status: 'Connected' }, 1);
+  } catch (error) {
+    dbHealthStatus.set(0);
+    dbConnectionInfo.reset();
+    dbConnectionInfo.set({ status: 'Unhealthy' }, 1);
+  }
+};
+
 app.use(cors());
 app.use(express.json());
+app.use(metricsMiddleware);
 
 // Root ping
 app.get('/', (req, res) => {
   res.send('Backend is running');
 });
+
+app.get('/health', async (req, res) => {
+  try {
+    await updateDatabaseHealthMetrics();
+
+    res.status(200).json({
+      status: 'ok',
+      database: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: process.uptime()
+    });
+  } catch (error) {
+    await updateDatabaseHealthMetrics();
+
+    res.status(503).json({
+      status: 'degraded',
+      database: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: process.uptime(),
+      message: error.message
+    });
+  }
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
+
+updateDatabaseHealthMetrics();
+setInterval(updateDatabaseHealthMetrics, 15000);
 
 /* ---------------------------------------------------------
    DEBUG ROUTES (COMMENTED OUT FOR PRODUCTION)
@@ -80,6 +138,7 @@ app.use('/api', apiRouter);
 app.use('/api', authRoutes);
 app.use('/api', mockRoutes);
 app.use('/api', thingSpeakRoutes);
+app.use('/api', telemetryRoutes);
 
 // Start server
 const PORT = process.env.PORT || 3000;

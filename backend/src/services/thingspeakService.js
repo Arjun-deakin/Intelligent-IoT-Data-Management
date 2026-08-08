@@ -1,6 +1,13 @@
 const thingspeakRepository = require('../repositories/thingspeakRepository');
 const pool = require('../db/pool');
 const TimeseriesRepository = require('../repositories/timeseriesRepository');
+const {
+  thingspeakPollsTotal,
+  thingspeakPollDurationSeconds,
+  thingspeakRowsInsertedTotal,
+  thingspeakLastRowsInserted,
+  thingspeakRetryCountTotal
+} = require('../monitoring/metrics');
 
 const timeseriesRepository = new TimeseriesRepository();
 const THINGSPEAK_DATASET_NAME =
@@ -119,6 +126,7 @@ const fetchThingSpeakWithRetry = async () => {
       return await thingspeakRepository.fetchChannelFeed();
     } catch (error) {
       lastError = error;
+      thingspeakRetryCountTotal.inc();
 
       console.warn(
         `ThingSpeak fetch attempt ${attempt} failed:`,
@@ -135,6 +143,8 @@ const fetchThingSpeakWithRetry = async () => {
 };
 
 const pollThingSpeakData = async () => {
+  const start = process.hrtime.bigint();
+
   try {
     // latestThingSpeakData = await fetchThingSpeakWithRetry();
     // await thingspeakRepository.saveThingSpeakData(latestThingSpeakData);
@@ -143,6 +153,12 @@ const pollThingSpeakData = async () => {
 
     const rawData = await fetchThingSpeakWithRetry();
     const savedCount = await saveThingSpeakRawDataToDatabase(rawData);
+    const durationSeconds = Number(process.hrtime.bigint() - start) / 1e9;
+
+    thingspeakPollsTotal.inc({ status: 'success' });
+    thingspeakPollDurationSeconds.observe({ status: 'success' }, durationSeconds);
+    thingspeakRowsInsertedTotal.inc(savedCount);
+    thingspeakLastRowsInserted.set(savedCount);
 
     latestThingSpeakData = {
       channel: rawData.channel || {},
@@ -174,6 +190,11 @@ const pollThingSpeakData = async () => {
       latestEntryId: latestFeed ? latestFeed.entryId : null,
     });
   } catch (error) {
+    const durationSeconds = Number(process.hrtime.bigint() - start) / 1e9;
+    thingspeakPollsTotal.inc({ status: 'error' });
+    thingspeakPollDurationSeconds.observe({ status: 'error' }, durationSeconds);
+    thingspeakLastRowsInserted.set(0);
+
     console.error("ThingSpeak poll failed:", {
       checkedAt: new Date().toISOString(),
       message: error.message,

@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net" modified="2026-08-01T12:00:00.000Z" agent="OpenCode" version="24.7.17" type="device">
+  <diagram id="docker-architecture" name="Docker Container Architecture">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="host" value="Developer Host / Browser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="30" width="240" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="compose" value="Docker Compose Runtime&#xa;docker-compose.yml" style="swimlane;rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="120" width="780" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="frontend" value="frontend container&#xa;Vite React app&#xa;Port 5173" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="compose">
+          <mxGeometry x="40" y="80" width="190" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="backend" value="backend container&#xa;Node/Express API&#xa;Port 3000&#xa;Health: /health" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="compose">
+          <mxGeometry x="290" y="80" width="210" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="db container&#xa;PostgreSQL 16&#xa;Port 5432" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="compose">
+          <mxGeometry x="570" y="80" width="170" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="volume" value="Named Volume&#xa;postgres_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="compose">
+          <mxGeometry x="570" y="250" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="schema" value="Schema Init&#xa;backend/src/db/schema.sql" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="compose">
+          <mxGeometry x="570" y="360" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="thingspeak" value="ThingSpeak Cloud API&#xa;Live IoT feed source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="800" y="250" width="190" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="srcfe" value="Bind Mount&#xa;new-frontend/frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="compose">
+          <mxGeometry x="40" y="260" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="srcbe" value="Bind Mount&#xa;backend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="compose">
+          <mxGeometry x="290" y="260" width="210" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="Startup order: db healthy -&gt; backend healthy -&gt; frontend ready&#xa;Proxy flow: browser -&gt; frontend -&gt; /api -&gt; backend -&gt; db / ThingSpeak" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="compose">
+          <mxGeometry x="40" y="380" width="460" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="HTTP :5173" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="host" target="frontend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="/api proxy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="frontend" target="backend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="backend" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="Persistent storage" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="db" target="volume">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="Init schema" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="schema" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="HTTPS poll" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="backend" target="thingspeak">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="Live code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="srcfe" target="frontend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="Live code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;" edge="1" parent="compose" source="srcbe" target="backend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

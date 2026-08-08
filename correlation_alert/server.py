@@ -1,15 +1,21 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
+from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 from main import detect_correlation_change_alert as run_correlation_pipeline
 
 app = Flask(__name__)
 CORS(app)
 
+registry = CollectorRegistry()
+request_counter = Counter('iot_correlation_alert_requests_total', 'Total requests to the correlation alert service', ['route', 'status'], registry=registry)
+request_duration = Histogram('iot_correlation_alert_request_duration_seconds', 'Request duration for the correlation alert service', ['route'], registry=registry)
+
 
 @app.route("/service-status", methods=["GET"])
 def service_status():
+    request_counter.labels(route='/service-status', status='200').inc()
     return jsonify({
         "status": "running",
         "message": "Correlation Alert Service is running.",
@@ -17,8 +23,14 @@ def service_status():
     })
 
 
+@app.route('/metrics', methods=['GET'])
+def metrics():
+    return generate_latest(registry), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+
+
 @app.route("/detect-correlation-alert", methods=["POST"])
 def detect_correlation_alert_api():
+    timer = request_duration.labels(route='/detect-correlation-alert').time()
     try:
         # OPTION 1: CSV file upload using multipart/form-data
         if "file" in request.files:
@@ -96,13 +108,17 @@ def detect_correlation_alert_api():
             "changes": changes
         }
 
+        request_counter.labels(route='/detect-correlation-alert', status='200').inc()
         return jsonify(response), 200
 
     except Exception as e:
+        request_counter.labels(route='/detect-correlation-alert', status='500').inc()
         return jsonify({
             "status": "error",
             "message": str(e)
         }), 500
+    finally:
+        timer.observe_duration()
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(host="0.0.0.0", debug=False, port=5001)

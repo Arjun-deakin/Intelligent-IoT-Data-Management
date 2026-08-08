@@ -75,6 +75,44 @@ The Intelligent IoT Data Management Platform is designed to provide a smarter wa
 
 We welcome data scientists, developers, and IoT engineers to build upon and extend this project! The codebase is modular, clean, and well-documented, making it easy to add new features or integrate new data sources. Docker and .env files ensure a flexible and consistent development environment. Whether you want to improve the machine learning models, enhance the frontend, or integrate with new sensors, your contributions are valued. Check out open issues and feature requests on GitHub to get started—pick up where we left off and keep building!
 
+## Docker Development Setup
+
+The repository now includes a local Docker development environment for the active frontend, backend, and PostgreSQL database.
+
+### Services
+
+- `db`: PostgreSQL 16 with the schema loaded from `backend/src/db/schema.sql`
+- `backend`: Node.js Express API on `http://localhost:3000`
+- `frontend`: Vite React app on `http://localhost:5173`
+
+### Start the stack
+
+Run the following from the repository root:
+
+```bash
+docker compose up --build
+```
+
+### Stop the stack
+
+```bash
+docker compose down
+```
+
+To also remove the database volume:
+
+```bash
+docker compose down -v
+```
+
+### Notes
+
+- The frontend proxies `/api` requests to the backend container, so browser requests work without hardcoding container hostnames.
+- The backend connects to PostgreSQL using the Compose service name `db`.
+- The Docker backend includes default ThingSpeak polling values and uses the public test channel `12397`. Replace them if you want to poll your own ThingSpeak channel.
+- Source folders are mounted into the containers for live development updates.
+- Existing draft Docker assets under `Docker/` were left in place, but `docker-compose.yml` at the repository root is the supported local setup.
+
 ## Contact
 
 Questions, suggestions, or want to join the project?  
