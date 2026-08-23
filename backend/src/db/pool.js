@@ -16,6 +16,11 @@ const pool = new Pool({
   port: process.env.DB_PORT
 });
 
+pool.on('error', (error) => {
+  // Prevent the process from crashing when an idle pooled client loses DB connectivity.
+  console.error('PostgreSQL pool error:', error.message);
+});
+
 const inferOperation = (queryText) => {
   if (typeof queryText !== 'string') {
     return 'unknown';

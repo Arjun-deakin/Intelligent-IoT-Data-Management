@@ -471,6 +471,15 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 8,
         "w": 6,
@@ -479,12 +488,55 @@
       },
       "id": 9,
       "options": {
-        "content": "### Service Health\n\n- **frontend**  \n  Planned browser telemetry  \n  **Healthy**\n\n- **backend**  \n  `/health` 200 OK  \n  **Healthy**\n\n- **db**  \n  PostgreSQL ready  \n  **Healthy**\n\n- **thingspeak poller**  \n  Runtime pipeline active  \n  **Warning if retries > 0**",
-        "mode": "markdown"
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
       },
-      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "iot_docker_service_up{service=~\"frontend|backend|db|correlation-alert|archived-analytics\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
       "title": "Service Health",
-      "type": "text"
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "container_name": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "service": 0,
+              "state": 1,
+              "health": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "service": "service",
+              "state": "state",
+              "health": "health",
+              "Value": "up"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
