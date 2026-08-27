@@ -19,6 +19,28 @@ This file explains how to run the Intelligent IoT Data Management Platform with 
   - `9090`
   - `9104`
 
+## Get The Code
+
+If you do not have the repository locally yet:
+
+```bash
+git clone https://github.com/Arjun-deakin/Intelligent-IoT-Data-Management.git
+cd Intelligent-IoT-Data-Management
+```
+
+If you already have the repository locally:
+
+```bash
+git pull origin main
+```
+
+To confirm you are on the expected branch and up to date:
+
+```bash
+git branch --show-current
+git status
+```
+
 ## Start The Full Stack
 
 Run from the repository root:
