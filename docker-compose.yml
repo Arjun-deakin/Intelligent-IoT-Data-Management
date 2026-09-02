@@ -32,13 +32,16 @@ services:
       DB_PORT: 5432
       DB_NAME: IoTDatabase
       PROCESSED_DATA_PATH: ./src/mock_data/processed_data.json
-      THINGSPEAK_CHANNEL_ID: 12397
+      THINGSPEAK_CHANNEL_ID: 1350261
       THINGSPEAK_READ_API_KEY: ""
       THINGSPEAK_RESULTS: 10
       THINGSPEAK_DATASET_NAME: thingspeak-live
-      THINGSPEAK_POLL_INTERVAL_MS: 60000
+      THINGSPEAK_POLL_INTERVAL_MS: 15000
       THINGSPEAK_MAX_RETRIES: 3
       THINGSPEAK_RETRY_DELAY_MS: 2000
+      ANALYTICS_SERVICE_URL: http://analytics-integration:5002
+      ANALYTICS_TIMEOUT_MS: 15000
+      JWT_SECRET: dev_secret_key
     ports:
       - "3000:3000"
     volumes:
@@ -46,6 +49,19 @@ services:
       - /app/node_modules
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  analytics-integration:
+    build:
+      context: .
+      dockerfile: ./analytics_integration/Dockerfile
+    container_name: iot-analytics-integration
+    ports:
+      - "5002:5002"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5002/health')"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -70,85 +86,6 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-
-  correlation-alert:
-    build:
-      context: ./correlation_alert
-    container_name: iot-correlation-alert
-    ports:
-      - "5001:5001"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/service-status')"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-
-  archived-analytics:
-    build:
-      context: .
-      dockerfile: ./data_science/archive/development/Dockerfile
-    container_name: iot-archived-analytics
-    ports:
-      - "5000:5000"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: iot-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
-    depends_on:
-      backend:
-        condition: service_started
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: iot-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    volumes:
-      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
-    depends_on:
-      prometheus:
-        condition: service_started
-    restart: unless-stopped
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: iot-cadvisor
-    ports:
-      - "8081:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    privileged: true
-    restart: unless-stopped
-
-  docker-service-exporter:
-    build:
-      context: ./monitoring/docker_exporter
-    container_name: iot-docker-service-exporter
-    ports:
-      - "9104:9104"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
 
 volumes:
   postgres_data:
