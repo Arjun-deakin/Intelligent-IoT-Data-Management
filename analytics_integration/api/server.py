@@ -10,6 +10,7 @@ POST /analytics/analyze
 from __future__ import annotations
 
 import pandas as pd
+from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 from flask import (
     Flask,
@@ -39,6 +40,20 @@ SUPPORTED_CORRELATION_METHODS = {
     "pearson",
     "spearman",
 }
+
+REGISTRY = CollectorRegistry()
+REQUEST_COUNTER = Counter(
+    'iot_analytics_integration_requests_total',
+    'Total requests handled by Analytics Integration',
+    ['route', 'status'],
+    registry=REGISTRY,
+)
+REQUEST_DURATION = Histogram(
+    'iot_analytics_integration_request_duration_seconds',
+    'Request duration for Analytics Integration',
+    ['route'],
+    registry=REGISTRY,
+)
 
 
 def _build_error_response(
@@ -284,6 +299,7 @@ def create_app() -> Flask:
 
     @app.get("/health")
     def health():
+        REQUEST_COUNTER.labels(route='/health', status='200').inc()
         return jsonify(
             {
                 "status": "ok",
@@ -293,8 +309,13 @@ def create_app() -> Flask:
             }
         ), 200
 
+    @app.get('/metrics')
+    def metrics():
+        return generate_latest(REGISTRY), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+
     @app.post("/analytics/analyze")
     def analyze():
+        timer = REQUEST_DURATION.labels(route='/analytics/analyze').time()
         payload = request.get_json(
             silent=True
         )
@@ -306,6 +327,8 @@ def create_app() -> Flask:
         )
 
         if request_errors:
+            REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
+            timer.observe_duration()
             return _build_error_response(
                 code="INVALID_REQUEST",
                 message="; ".join(
@@ -367,12 +390,16 @@ def create_app() -> Flask:
                 ),
             )
 
+            REQUEST_COUNTER.labels(route='/analytics/analyze', status='200').inc()
+            timer.observe_duration()
             return jsonify(response), 200
 
         except (
             InputValidationError,
             ValueError,
         ) as exc:
+            REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
+            timer.observe_duration()
             return _build_error_response(
                 code="INVALID_DATA",
                 message=str(exc),
@@ -383,6 +410,9 @@ def create_app() -> Flask:
             current_app.logger.exception(
                 "Analytics pipeline failed."
             )
+
+            REQUEST_COUNTER.labels(route='/analytics/analyze', status='500').inc()
+            timer.observe_duration()
 
             return _build_error_response(
                 code="ANALYTICS_INTERNAL_ERROR",

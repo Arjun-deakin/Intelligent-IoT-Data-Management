@@ -10,26 +10,15 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - backend:3000
+          - host.docker.internal:3000
 
-  - job_name: cadvisor
+  - job_name: analytics_integration
+    metrics_path: /metrics
     static_configs:
       - targets:
-          - cadvisor:8080
+          - host.docker.internal:5002
 
   - job_name: docker_service_exporter
     static_configs:
       - targets:
-          - docker-service-exporter:9104
-
-  - job_name: correlation_alert
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-          - correlation-alert:5001
-
-  - job_name: archived_analytics
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-          - archived-analytics:5000
+          - host.docker.internal:9104

@@ -58,6 +58,11 @@ services:
       context: .
       dockerfile: ./analytics_integration/Dockerfile
     container_name: iot-analytics-integration
+    networks:
+      default:
+        aliases:
+          - analytics-integration
+          - analytics_integration
     ports:
       - "5002:5002"
     healthcheck:
@@ -86,6 +91,53 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: iot-prometheus
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    depends_on:
+      backend:
+        condition: service_started
+      analytics-integration:
+        condition: service_started
+      docker-service-exporter:
+        condition: service_started
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iot-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+  docker-service-exporter:
+    build:
+      context: ./monitoring/docker_exporter
+    container_name: iot-docker-service-exporter
+    ports:
+      - "9104:9104"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
 
 volumes:
   postgres_data:
