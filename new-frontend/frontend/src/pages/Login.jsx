@@ -48,7 +48,7 @@ function Login() {
         return;
       }
 
-      saveAuthSession({});
+      saveAuthSession(result);
       navigate("/home");
     } catch (err) {
       setMessage(
@@ -94,13 +94,13 @@ function Login() {
     setLoading(true);
 
     try {
-      await verifyTwoFactorCode({
+      const session = await verifyTwoFactorCode({
         mfaChallengeId,
         otp: enteredCode,
         rememberMe,
       });
 
-      saveAuthSession({});
+      saveAuthSession(session);
       navigate("/home");
     } catch (err) {
       setMessage(

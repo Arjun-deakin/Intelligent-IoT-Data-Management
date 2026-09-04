@@ -315,112 +315,106 @@ def create_app() -> Flask:
 
     @app.post("/analytics/analyze")
     def analyze():
-        timer = REQUEST_DURATION.labels(route='/analytics/analyze').time()
-        payload = request.get_json(
-            silent=True
-        )
+        with REQUEST_DURATION.labels(route='/analytics/analyze').time():
+            payload = request.get_json(
+                silent=True
+            )
 
-        request_errors = (
-            _validate_request_payload(
+            request_errors = _validate_request_payload(
                 payload
             )
-        )
 
-        if request_errors:
-            REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
-            timer.observe_duration()
-            return _build_error_response(
-                code="INVALID_REQUEST",
-                message="; ".join(
-                    request_errors
-                ),
-                http_status=400,
-            )
+            if request_errors:
+                REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
+                return _build_error_response(
+                    code="INVALID_REQUEST",
+                    message="; ".join(
+                        request_errors
+                    ),
+                    http_status=400,
+                )
 
-        data = payload["data"]
-        model = payload["model"]
-        correlation = payload[
-            "correlation"
-        ]
+            data = payload["data"]
+            model = payload["model"]
+            correlation = payload[
+                "correlation"
+            ]
 
-        df = pd.DataFrame(data)
+            df = pd.DataFrame(data)
 
-        try:
-            response = run_analytics_pipeline(
-                df=df,
-                timestamp_col=payload[
-                    "timestamp_col"
-                ],
-                entity_id=payload.get(
-                    "entity_id"
-                ),
-                model_metric=model[
-                    "metric"
-                ],
-                correlation_streams=(
-                    correlation["streams"]
-                ),
-                detector_name=model.get(
-                    "detector",
-                    "isolationforest",
-                ),
-                detector_parameters=(
-                    model.get(
-                        "parameters",
-                        {},
-                    )
-                ),
-                correlation_window_size=(
-                    correlation.get(
-                        "window_size",
-                        20,
-                    )
-                ),
-                correlation_step_size=(
-                    correlation.get(
-                        "step_size",
-                        10,
-                    )
-                ),
-                correlation_method=(
-                    correlation.get(
-                        "method",
-                        "pearson",
-                    )
-                ),
-            )
+            try:
+                response = run_analytics_pipeline(
+                    df=df,
+                    timestamp_col=payload[
+                        "timestamp_col"
+                    ],
+                    entity_id=payload.get(
+                        "entity_id"
+                    ),
+                    model_metric=model[
+                        "metric"
+                    ],
+                    correlation_streams=(
+                        correlation["streams"]
+                    ),
+                    detector_name=model.get(
+                        "detector",
+                        "isolationforest",
+                    ),
+                    detector_parameters=(
+                        model.get(
+                            "parameters",
+                            {},
+                        )
+                    ),
+                    correlation_window_size=(
+                        correlation.get(
+                            "window_size",
+                            20,
+                        )
+                    ),
+                    correlation_step_size=(
+                        correlation.get(
+                            "step_size",
+                            10,
+                        )
+                    ),
+                    correlation_method=(
+                        correlation.get(
+                            "method",
+                            "pearson",
+                        )
+                    ),
+                )
 
-            REQUEST_COUNTER.labels(route='/analytics/analyze', status='200').inc()
-            timer.observe_duration()
-            return jsonify(response), 200
+                REQUEST_COUNTER.labels(route='/analytics/analyze', status='200').inc()
+                return jsonify(response), 200
 
-        except (
-            InputValidationError,
-            ValueError,
-        ) as exc:
-            REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
-            timer.observe_duration()
-            return _build_error_response(
-                code="INVALID_DATA",
-                message=str(exc),
-                http_status=400,
-            )
+            except (
+                InputValidationError,
+                ValueError,
+            ) as exc:
+                REQUEST_COUNTER.labels(route='/analytics/analyze', status='400').inc()
+                return _build_error_response(
+                    code="INVALID_DATA",
+                    message=str(exc),
+                    http_status=400,
+                )
 
-        except Exception:
-            current_app.logger.exception(
-                "Analytics pipeline failed."
-            )
-
-            REQUEST_COUNTER.labels(route='/analytics/analyze', status='500').inc()
-            timer.observe_duration()
-
-            return _build_error_response(
-                code="ANALYTICS_INTERNAL_ERROR",
-                message=(
+            except Exception:
+                current_app.logger.exception(
                     "Analytics pipeline failed."
-                ),
-                http_status=500,
-            )
+                )
+
+                REQUEST_COUNTER.labels(route='/analytics/analyze', status='500').inc()
+
+                return _build_error_response(
+                    code="ANALYTICS_INTERNAL_ERROR",
+                    message=(
+                        "Analytics pipeline failed."
+                    ),
+                    http_status=500,
+                )
 
     return app
 

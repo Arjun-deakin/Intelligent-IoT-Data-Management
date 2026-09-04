@@ -4,6 +4,10 @@ import { sendFrontendTelemetry } from "./frontendTelemetry";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "/api";
 
+let accessToken = null;
+
+const readStoredToken = () => sessionStorage.getItem("iot_token");
+
 const authClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -39,6 +43,16 @@ export const loginUser = async ({ email, password, rememberMe = false }) => {
   return response.data.data;
 };
 
+export const getAccessToken = () => accessToken || readStoredToken();
+
+export const setAccessToken = (token) => {
+  accessToken = token || null;
+};
+
+export const clearAccessToken = () => {
+  accessToken = null;
+};
+
 export const verifyTwoFactorCode = async ({
   mfaChallengeId,
   otp,
@@ -71,11 +85,41 @@ export const registerUser = async ({ email, password, confirmPassword }) => {
   return response.data.data;
 };
 
-export const saveAuthSession = ({ token, user }) => {
+export const refreshSession = async () => {
+  const response = await authClient.post("/auth/refresh");
+  const token = response.data?.data?.accessToken;
+
+  setAccessToken(token);
+
+  return response.data;
+};
+
+export const logoutUser = async () => {
+  try {
+    await authClient.post(
+      "/auth/logout",
+      null,
+      accessToken
+        ? {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        : undefined
+    );
+  } finally {
+    clearAuthSession();
+  }
+};
+
+export const saveAuthSession = ({ token, accessToken, user }) => {
+  const resolvedToken = accessToken || token || null;
+
+  setAccessToken(resolvedToken);
   sessionStorage.setItem("iot_auth", "true");
 
-  if (token) {
-    sessionStorage.setItem("iot_token", token);
+  if (resolvedToken) {
+    sessionStorage.setItem("iot_token", resolvedToken);
   }
 
   if (user) {
@@ -84,6 +128,7 @@ export const saveAuthSession = ({ token, user }) => {
 };
 
 export const clearAuthSession = () => {
+  clearAccessToken();
   sessionStorage.removeItem("iot_auth");
   sessionStorage.removeItem("iot_token");
   sessionStorage.removeItem("iot_user");
