@@ -9,14 +9,14 @@ from wsgiref.simple_server import make_server
 
 COMPOSE_PROJECT = os.environ.get("COMPOSE_PROJECT_NAME", "capstoneb_build_and_develop")
 MONITORED_SERVICES = {
+    "analytics-integration",
     "backend",
     "db",
+    "docker-service-exporter",
     "frontend",
-    "prometheus",
     "grafana",
-    "cadvisor",
-    "correlation-alert",
-    "archived-analytics",
+    "mailhog",
+    "prometheus",
 }
 
 client = DockerClient(base_url="unix://var/run/docker.sock", timeout=5)

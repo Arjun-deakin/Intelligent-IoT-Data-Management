@@ -497,7 +497,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "iot_docker_service_up{service=~\"frontend|backend|db|correlation-alert|archived-analytics\"}",
+          "expr": "iot_docker_service_up{service=~\"analytics-integration|backend|db|frontend|grafana|prometheus\"}",
           "format": "table",
           "instant": true,
           "range": false,
@@ -846,7 +846,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "iot_docker_service_memory_usage_bytes{service=~\"backend|db|frontend|prometheus|grafana|cadvisor|correlation-alert|archived-analytics\",state=\"running\"}",
+          "expr": "iot_docker_service_memory_usage_bytes{service=~\"analytics-integration|backend|db|docker-service-exporter|frontend|grafana|mailhog|prometheus\",state=\"running\"}",
           "legendFormat": "{{service}}",
           "range": true,
           "refId": "A"
@@ -887,7 +887,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "iot_docker_service_cpu_percent{service=~\"backend|db|frontend|prometheus|grafana|cadvisor|correlation-alert|archived-analytics\",state=\"running\"}",
+          "expr": "iot_docker_service_cpu_percent{service=~\"analytics-integration|backend|db|docker-service-exporter|frontend|grafana|mailhog|prometheus\",state=\"running\"}",
           "legendFormat": "{{service}}",
           "range": true,
           "refId": "A"
