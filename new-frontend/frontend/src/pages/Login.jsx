@@ -1,5 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  loginUser,
+  verifyTwoFactorCode,
+  resendTwoFactorCode,
+  saveAuthSession,
+} from "../services/authClient";
 import "./Login.css";
 
 function Login() {
@@ -13,28 +19,46 @@ function Login() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [mfaChallengeId, setMfaChallengeId] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const inputRefs = useRef([]);
 
-  const handleLoginSubmit = (e) => {
+  useEffect(() => {
+    if (sessionStorage.getItem("register_success") === "true") {
+      setMessage("Account created successfully. Please sign in.");
+      setMessageType("success");
+      sessionStorage.removeItem("register_success");
+    }
+  }, []);
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-
-    const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
-
-    if (!savedUser) {
-      setMessage("No registered account found. Please sign up first.");
-      setMessageType("error");
-      return;
-    }
-
-    if (savedUser.email !== email || savedUser.password !== password) {
-      setMessage("Invalid email or password.");
-      setMessageType("error");
-      return;
-    }
-
+    setLoading(true);
     setMessage("");
-    setStep(2);
+
+    try {
+      const result = await loginUser({ email, password, rememberMe });
+
+      if (result?.mfaChallengeId) {
+        setMfaChallengeId(result.mfaChallengeId);
+        setMessage("");
+        setStep(2);
+        return;
+      }
+
+      saveAuthSession({});
+      navigate("/home");
+    } catch (err) {
+      setMessage(
+        err?.response?.data?.error?.message ||
+          "Unable to sign in. Please try again."
+      );
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOtpChange = (value, index) => {
@@ -55,8 +79,9 @@ function Login() {
     }
   };
 
-  const handleVerifyCode = (e) => {
+  const handleVerifyCode = async (e) => {
     e.preventDefault();
+    setMessage("");
 
     const enteredCode = otp.join("");
 
@@ -66,16 +91,51 @@ function Login() {
       return;
     }
 
-    localStorage.setItem("isAuthenticated", "true");
-    sessionStorage.setItem("iot_auth", "true");
+    setLoading(true);
 
-    setMessage("");
-    navigate("/home");
+    try {
+      await verifyTwoFactorCode({
+        mfaChallengeId,
+        otp: enteredCode,
+        rememberMe,
+      });
+
+      saveAuthSession({});
+      navigate("/home");
+    } catch (err) {
+      setMessage(
+        err?.response?.data?.error?.message ||
+          "Invalid verification code."
+      );
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResendCode = () => {
-    setMessage("A new verification code has been sent.");
-    setMessageType("success");
+  const handleResendCode = async () => {
+    if (!mfaChallengeId) {
+      setMessage("Please sign in again to get a new code.");
+      setMessageType("error");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      await resendTwoFactorCode({ mfaChallengeId });
+      setMessage("A new verification code has been sent.");
+      setMessageType("success");
+    } catch (err) {
+      setMessage(
+        err?.response?.data?.error?.message ||
+          "Unable to resend the code."
+      );
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToLogin = () => {
@@ -145,7 +205,11 @@ function Login() {
 
               <div className="login-options">
                 <label className="remember-me">
-                  <input type="checkbox" />
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
                   Remember me
                 </label>
 
@@ -154,8 +218,8 @@ function Login() {
                 </Link>
               </div>
 
-              <button type="submit" className="login-button">
-                Login
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? "Signing in..." : "Login"}
               </button>
             </form>
 
@@ -197,8 +261,8 @@ function Login() {
                 ))}
               </div>
 
-              <button type="submit" className="login-button">
-                Verify Code
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? "Verifying..." : "Verify Code"}
               </button>
             </form>
 

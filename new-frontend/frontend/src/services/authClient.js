@@ -6,6 +6,7 @@ const API_BASE_URL =
 
 const authClient = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -28,42 +29,46 @@ authClient.interceptors.response.use(
   }
 );
 
-export const loginUser = async ({ email, password }) => {
+export const loginUser = async ({ email, password, rememberMe = false }) => {
   const response = await authClient.post("/auth/login", {
     email,
     password,
+    rememberMe,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
-export const verifyTwoFactorCode = async ({ email, otp, tempToken }) => {
-  const response = await authClient.post("/auth/verify-2fa", {
-    email,
+export const verifyTwoFactorCode = async ({
+  mfaChallengeId,
+  otp,
+  rememberMe = false,
+}) => {
+  const response = await authClient.post("/auth/mfa/verify", {
+    mfaChallengeId,
     otp,
-    tempToken,
+    rememberMe,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
-export const resendTwoFactorCode = async ({ email, tempToken }) => {
-  const response = await authClient.post("/auth/resend-2fa", {
-    email,
-    tempToken,
+export const resendTwoFactorCode = async ({ mfaChallengeId }) => {
+  const response = await authClient.post("/auth/mfa/resend", {
+    mfaChallengeId,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
-export const registerUser = async ({ fullName, email, password }) => {
+export const registerUser = async ({ email, password, confirmPassword }) => {
   const response = await authClient.post("/auth/register", {
-    fullName,
     email,
     password,
+    confirmPassword,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const saveAuthSession = ({ token, user }) => {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { registerUser } from "../services/authClient";
 import "./RegistrationPage.css";
 
 const RegistrationPage = () => {
@@ -13,6 +14,7 @@ const RegistrationPage = () => {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,8 +25,9 @@ const RegistrationPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (
       !formData.fullName ||
@@ -41,17 +44,25 @@ const RegistrationPage = () => {
       return;
     }
 
-    localStorage.setItem(
-      "registeredUser",
-      JSON.stringify({
-        fullName: formData.fullName,
+    try {
+      setLoading(true);
+
+      await registerUser({
         email: formData.email,
         password: formData.password,
-      })
-    );
+        confirmPassword: formData.confirmPassword,
+      });
 
-    setError("");
-    navigate("/");
+      sessionStorage.setItem("register_success", "true");
+      navigate("/");
+    } catch (err) {
+      setError(
+        err?.response?.data?.error?.message ||
+          "Unable to create account. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,8 +115,8 @@ const RegistrationPage = () => {
 
           {error && <p className="auth-error">{error}</p>}
 
-          <button type="submit" className="auth-primary-btn">
-            Sign Up
+          <button type="submit" className="auth-primary-btn" disabled={loading}>
+            {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
