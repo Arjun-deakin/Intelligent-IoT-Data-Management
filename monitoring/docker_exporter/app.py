@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from docker import DockerClient
@@ -65,6 +66,14 @@ def collect_container_sample(container):
 
     restart_count = float(attrs.get("RestartCount", 0))
 
+    start_time = 0.0
+    started_at = state_info.get("StartedAt")
+    if started_at:
+        try:
+            start_time = datetime.fromisoformat(started_at.replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            start_time = 0.0
+
     if state == "running":
         try:
             stats = container.stats(stream=False)
@@ -77,7 +86,7 @@ def collect_container_sample(container):
         memory_usage = 0.0
         cpu_percent = 0.0
 
-    return labels, restart_count, memory_usage, cpu_percent
+    return labels, restart_count, start_time, memory_usage, cpu_percent
 
 
 def build_metrics_output():
@@ -101,6 +110,12 @@ def build_metrics_output():
         labelnames=["service", "container_name", "state", "health"],
         registry=registry,
     )
+    start_time_gauge = Gauge(
+        "iot_docker_service_start_time_seconds",
+        "Docker service container start time as unix epoch seconds",
+        labelnames=["service", "container_name", "state", "health"],
+        registry=registry,
+    )
     up_gauge = Gauge(
         "iot_docker_service_up",
         "Docker service up status where 1 is running",
@@ -121,10 +136,11 @@ def build_metrics_output():
             if result is None:
                 continue
 
-            labels, restart_count, memory_usage, cpu_percent = result
+            labels, restart_count, start_time, memory_usage, cpu_percent = result
 
             up_gauge.labels(**labels).set(1 if labels["state"] == "running" else 0)
             restart_gauge.labels(**labels).set(restart_count)
+            start_time_gauge.labels(**labels).set(start_time)
             memory_gauge.labels(**labels).set(memory_usage)
             cpu_gauge.labels(**labels).set(cpu_percent)
 

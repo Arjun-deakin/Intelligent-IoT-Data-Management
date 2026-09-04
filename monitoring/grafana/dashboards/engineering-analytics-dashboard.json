@@ -347,7 +347,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(changes(container_start_time_seconds{id=~\"/docker/(0a6d54f4db61|840daaefdac8|cf0cfaf404f0|04574f5476c7|1cdb8c55a6e0|5d1a38dd954c|aa2ff9a7e4d2|37f86079a5e4)\"}[6h])) or vector(0)",
+          "expr": "sum(changes(iot_docker_service_start_time_seconds{service=~\"analytics-integration|backend|db|docker-service-exporter|frontend|grafana|mailhog|prometheus\"}[6h])) or vector(0)",
           "instant": true,
           "legendFormat": "Container Restarts",
           "range": false,
