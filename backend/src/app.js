@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { assertProductionAuthConfig } = require('./config/authConfig');
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -18,7 +19,18 @@ const {
   dbConnectionInfo
 } = require('./monitoring/metrics');
 
-const app = express();
+function cookieParser(req, _res, next) {
+  req.cookies = Object.fromEntries(
+    (req.headers.cookie || "")
+      .split(";")
+      .filter(Boolean)
+      .map((part) => {
+        const i = part.indexOf("=");
+        return [part.slice(0, i).trim(), decodeURIComponent(part.slice(i + 1))];
+      }),
+  );
+  next();
+}
 
 const updateDatabaseHealthMetrics = async () => {
   try {
@@ -35,8 +47,14 @@ const updateDatabaseHealthMetrics = async () => {
   }
 };
 
-app.use(cors());
+assertProductionAuthConfig();
+
+const app = express();
+const origin = process.env.FRONTEND_ORIGIN;
+
+app.use(cors({ origin: origin ? origin.split(",") : true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser);
 app.use(metricsMiddleware);
 
 app.get('/', (req, res) => {
@@ -62,6 +80,19 @@ app.get('/health', async (req, res) => {
     uptimeSeconds: process.uptime()
   });
 });
+
+app.get('/ready', (_req, res) =>
+  process.env.NODE_ENV === "production" && !process.env.JWT_SECRET
+    ? res
+        .status(503)
+        .json({
+          error: {
+            code: "READY_DEPENDENCY_UNAVAILABLE",
+            message: "Authentication configuration is unavailable.",
+          },
+        })
+    : res.json({ status: "ready" }),
+);
 
 app.get('/metrics', async (_req, res) => {
   await updateDatabaseHealthMetrics();
